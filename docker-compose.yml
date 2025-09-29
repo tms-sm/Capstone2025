@@ -1,0 +1,38 @@
+services:
+  db:
+    image: mysql:8.0
+    container_name: dentaplus_db
+    restart: always
+    environment:
+      MYSQL_DATABASE: dentaplus_db
+      MYSQL_ROOT_PASSWORD: root1234
+    ports:
+      - "3307:3306"
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-proot1234"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    volumes:
+      - mysql_data:/var/lib/mysql
+
+  web:
+    build: .
+    container_name: dentaplus_web
+    command: python manage.py runserver 0.0.0.0:8000
+    volumes:
+      - .:/app
+    ports:
+      - "8000:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      MYSQL_DATABASE: dentaplus_db
+      MYSQL_USER: root
+      MYSQL_PASSWORD: root1234
+      MYSQL_HOST: db
+      MYSQL_PORT: 3306
+
+volumes:
+  mysql_data:
